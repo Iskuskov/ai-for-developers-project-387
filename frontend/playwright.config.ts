@@ -13,7 +13,9 @@ export default defineConfig({
   // Один сценарий, работающий с общим состоянием стека, — без параллельности
   fullyParallel: false,
   workers: 1,
-  timeout: 60_000,
+  // Стек для сценария тяжёлый (JVM + vite preview + Chromium) и на двухъядерных
+  // CI-раннерах не укладывается в минуту: в 386 ci дважды падал на лимите 60с
+  timeout: 180_000,
   expect: { timeout: 10_000 },
   retries: process.env.CI ? 1 : 0,
   use: {
