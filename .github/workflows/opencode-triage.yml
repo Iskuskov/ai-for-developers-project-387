@@ -1,0 +1,46 @@
+name: opencode-triage
+
+on:
+  issues:
+    types: [opened, reopened]
+
+# один прогон на issue; «пустые» прогоны от комментариев ботов не возможны
+# здесь (триггер — issues), но изолируем на всякий случай по sender
+concurrency:
+  group: ${{ github.event.sender.type == 'Bot' && format('opencode-triage-bot-{0}', github.event.issue.id) || format('opencode-triage-{0}', github.event.issue.number) }}
+  cancel-in-progress: true
+
+jobs:
+  triage:
+    # только доверенные авторы, не боты; тикеты, подготовленные скиллами
+    # (метка ready-for-agent от to-spec/to-tickets), повторно не разбираются
+    if: |
+      github.event.sender.type != 'Bot' &&
+      contains(fromJSON('["OWNER","COLLABORATOR","MEMBER"]'), github.event.issue.author_association) &&
+      !contains(toJSON(github.event.issue.labels.*.name), 'ready-for-agent')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Triage issue
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        with:
+          model: opencode/big-pickle
+          share: "false"
+          prompt: |
+            Разбери issue #${{ github.event.issue.number }}. Прочитай его тело и кодовую базу репозитория (backend/, frontend/, spec/main.tsp, GLOSSARY.md), затем примени скилл triage:
+            - определи суть обращения и, если данных не хватает, чего именно не хватает;
+            - если обращение — уже подготовленный скиллами тикет со спецификацией (метка ready-for-agent), ничего не делай и не комментируй;
+            - поставь issue ровно одну метку: needs-triage (нужна оценка человеком), needs-info (ждём данных от автора), wontfix (вне рамок проекта), ready-for-agent (обращение полностью понятно и готово к работе агенту);
+            - оставь один короткий комментарий-разбор: суть обращения, затрагиваемая область кода, рекомендованный следующий шаг.
+            Вопросы задавай только текстом комментария; интерактивные инструменты вопросов использовать нельзя.
