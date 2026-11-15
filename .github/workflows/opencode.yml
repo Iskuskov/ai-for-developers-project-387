@@ -42,3 +42,6 @@ jobs:
         with:
           model: opencode/big-pickle
           mentions: /oc,/opencode
+          # share: false — явный запрет автопубликации сессий (для публичных
+          # репозиториев экшен по умолчанию шарит); решение по share — manual
+          share: "false"
