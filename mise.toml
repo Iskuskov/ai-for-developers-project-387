@@ -13,6 +13,7 @@ pnpm = "12"
 google-java-format = "2.0.0"
 hk = "2.12.0"
 pitchfork = "2.34.0"
+actionlint = "1.7.12"
 
 [tasks.install]
 description = "Установить зависимости бекенда и фронтенда"
@@ -83,6 +84,10 @@ description = "Линт фронтенда (oxlint)"
 depends = ["gen:client", "install:frontend"]
 run = "cd frontend && pnpm lint"
 
+[tasks."lint:workflows"]
+description = "Линт воркфлоу GitHub Actions (actionlint)"
+run = "actionlint .github/workflows/*.yml"
+
 [tasks."build:frontend"]
 description = "Проверка типов и сборка фронтенда"
 depends = ["gen:client", "install:frontend"]
@@ -95,7 +100,7 @@ run = "cd frontend && pnpm exec playwright test"
 
 [tasks.check]
 description = "Все проверки: линтеры, тесты, сборка фронтенда, e2e, дрейф генерации (то же, что в CI)"
-depends = ["lint:backend", "lint:frontend", "test:backend", "test:frontend", "gen:check", "check:e2e"]
+depends = ["lint:workflows", "lint:backend", "lint:frontend", "test:backend", "test:frontend", "gen:check", "check:e2e"]
 
 [daemons.backend]
 task = "dev:backend"
