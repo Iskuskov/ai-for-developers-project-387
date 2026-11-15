@@ -67,7 +67,7 @@ run = "cd backend && ./gradlew test"
 
 [tasks."test:frontend"]
 description = "Запустить тесты фронтенда (Vitest)"
-depends = ["install:frontend"]
+depends = ["gen:client", "install:frontend"]
 run = "cd frontend && pnpm test"
 
 [tasks."lint:backend"]
@@ -80,12 +80,12 @@ run = "find backend/src -name '*.java' -print0 | xargs -0 google-java-format --r
 
 [tasks."lint:frontend"]
 description = "Линт фронтенда (oxlint)"
-depends = ["install:frontend"]
+depends = ["gen:client", "install:frontend"]
 run = "cd frontend && pnpm lint"
 
 [tasks."build:frontend"]
 description = "Проверка типов и сборка фронтенда"
-depends = ["install:frontend"]
+depends = ["gen:client", "install:frontend"]
 run = "cd frontend && pnpm build"
 
 [tasks."check:e2e"]

@@ -25,5 +25,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './vitest.setup.mjs',
     include: ['src/**/*.test.{ts,tsx}'],
+    // моки модулей в Vitest 5 изредка не применяются, когда файлы гонятся
+    // параллельно на 2-4-ядерных CI-раннерах; файлов мало, сериализация дешева
+    fileParallelism: false,
   },
 })
