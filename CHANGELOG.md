@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/Iskuskov/ai-for-developers-project-387/compare/v1.0.0...v1.0.1) (2026-11-15)
+
+
+### Bug Fixes
+
+* изолировать прогоны от комментариев ботов в concurrency воркфлоу агента ([bc283fb](https://github.com/Iskuskov/ai-for-developers-project-387/commit/bc283fb50aa3e933d73eb262b644373b5b8240fb))
+
 ## 1.0.0 (2026-11-14)
 
 
