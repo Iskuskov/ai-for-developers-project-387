@@ -36,9 +36,12 @@ jobs:
           persist-credentials: false
 
       - name: Run OpenCode
-        uses: anomalyco/opencode/github@latest
+        uses: anomalyco/opencode/github@2.0
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          # экшен ставит opencode по маркеру releases/latest (там сейчас
+          # v1.19.5, не понимающий наш V2-конфиг) — пинним V2 явно
+          VERSION: v2.3.0
         with:
           model: opencode/big-pickle
           mentions: /oc,/opencode
