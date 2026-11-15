@@ -6,9 +6,12 @@ on:
   pull_request_review_comment:
     types: [created]
 
-# один прогон на issue: новая команда агента отменяет устаревшую
+# один прогон на issue: новая команда отменяет устаревшую.
+# Комментарии ботов (в т.ч. ответ самого агента) получают уникальную
+# группу, чтобы их «пустые» прогоны не отменяли рабочий прогон:
+# concurrency вычисляется раньше, чем if у джоба
 concurrency:
-  group: opencode-${{ github.event.issue.number }}
+  group: ${{ github.event.comment.user.type == 'Bot' && format('opencode-bot-{0}', github.event.comment.id) || format('opencode-{0}', github.event.issue.number) }}
   cancel-in-progress: true
 
 jobs:
