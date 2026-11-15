@@ -70,7 +70,7 @@ docker run --rm -e PORT=3000 -p 3000:3000 call-calendar
 К репозиторию подключён агент [OpenCode](https://opencode.ai/docs/github/): он выполняет задания из комментариев к issue и PR внутри GitHub Actions.
 
 - **Событие**: комментарий к issue или PR (`issue_comment` и `pull_request_review_comment`, только `types: [created]`). Воркфлоу — `.github/workflows/opencode.yml`.
-- **Модель**: `opencode/mimo-v2.6-flash-free` (бесплатная: воркспейс Hexlet Students отключил доступ API-ключей к платным моделям); ключ модели лежит в секрете `OPENCODE_API_KEY` (Settings → Secrets and variables → Actions).
+- **Модель**: `opencode/big-pickle` (бесплатная: воркспейс Hexlet Students отключил доступ API-ключей к платным моделям, бесплатные mimo/nemotron недоступны — проверено локально); ключ модели лежит в секрете `OPENCODE_API_KEY` (Settings → Secrets and variables → Actions).
 - **Назначение**: объяснить issue, ответить на вопрос по репозиторию, исправить мелочь отдельной веткой/PR.
 - **Команды вызова** (`mentions`): `/oc <задание>` или `/opencode <задание>` — например, `/oc explain this issue` или `/oc fix this`.
 - **Кто может вызывать**: доверенные участники — владелец и коллабораторы репозитория. Комментарии ботов игнорируются; авторы из недоверенных форков отсекаются условием джоба и не доходят до шагов, где доступны секреты.
