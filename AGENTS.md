@@ -29,6 +29,10 @@
 - API-контракт для будущих фич: TypeSpec → OpenAPI → клиентский SDK для фронтенда. Вся цепочка перегенерируется одной командой `mise run gen:client`; CI перегенерирует её же и падает при дрейфе (`mise run gen:check` внутри `mise run check`).
 - Сгенерированные файлы руками не правим: `spec/tsp-output/openapi.1.yaml` и `frontend/src/shared/api/`. Источник правок — контракт `spec/main.tsp`; изменили контракт → перегенерировали → закоммитили всё вместе.
 
+## GitHub-агент
+
+Агент OpenCode подключён к репозиторию через воркфлоу `.github/workflows/opencode.yml`: задаёте задание комментарием `/oc <задание>` или `/opencode <задание>` в issue или PR — агент отвечает комментарием (полный лог — в Actions). Команды доступны доверенным участникам (владелец и коллабораторы); модель — `opencode/glm-5.3-flash`. Подробнее — в [README](README.md#агент-в-github-opencode).
+
 ## Agent skills
 
 ### Issue tracker

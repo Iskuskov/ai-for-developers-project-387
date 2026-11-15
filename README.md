@@ -65,6 +65,19 @@ docker run --rm -p 8080:8080 call-calendar        # http://localhost:8080
 docker run --rm -e PORT=3000 -p 3000:3000 call-calendar
 ```
 
+## Агент в GitHub (OpenCode)
+
+К репозиторию подключён агент [OpenCode](https://opencode.ai/docs/github/): он выполняет задания из комментариев к issue и PR внутри GitHub Actions.
+
+- **Событие**: комментарий к issue или PR (`issue_comment` и `pull_request_review_comment`, только `types: [created]`). Воркфлоу — `.github/workflows/opencode.yml`.
+- **Модель**: `opencode/glm-5.3-flash`; ключ модели лежит в секрете `OPENCODE_API_KEY` (Settings → Secrets and variables → Actions).
+- **Назначение**: объяснить issue, ответить на вопрос по репозиторию, исправить мелочь отдельной веткой/PR.
+- **Команды вызова** (`mentions`): `/oc <задание>` или `/opencode <задание>` — например, `/oc explain this issue` или `/oc fix this`.
+- **Кто может вызывать**: доверенные участники — владелец и коллабораторы репозитория. Комментарии ботов игнорируются; авторы из недоверенных форков отсекаются условием джоба и не доходят до шагов, где доступны секреты.
+- **Права и безопасность**: джобу исполняет OpenCode GitHub App в стандартном OIDC-режиме (не вариант `use_github_token` без App): воркфлоу запрашивает `contents: read` и `id-token: write` (обмен OIDC-токена на токен установки App), checkout — с `persist-credentials: false`; таймаут джоба — 15 минут; параллельные прогоны ограничены группой `concurrency` на issue — новая команда отменяет устаревшую.
+- **share**: `manual` (в `opencode.json`) — сессии агента не публикуются автоматически, но любую можно расшарить вручную ссылкой: в сессии виден полный ход работы агента, а не только итоговый ответ.
+- **Результаты**: ответ агента — комментарием в issue; полный лог прогона — на вкладке Actions.
+
 ## Установка
 
 Требуется [mise](https://mise.jdx.dev/) (`curl https://mise.run | sh`) — он подтянет Java 25, Node.js 26, pnpm и остальные инструменты по `mise.toml`.
