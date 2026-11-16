@@ -28,6 +28,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      actions: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -35,7 +36,31 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
 
+      - name: Budget check (до вызова модели)
+        id: budget
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+          LIMIT: ${{ vars.OPENCODE_PR_BUDGET || '3' }}
+        run: |
+          TITLE=$(gh api "repos/${{ github.repository }}/issues/$ISSUE" --jq .title)
+          USED=$(gh api "repos/${{ github.repository }}/actions/runs?event=issue_comment&per_page=100" \
+            --jq "[.workflow_runs[] | select(.name == \"opencode\" and .display_title == \"$TITLE\")] | length")
+          echo "Прогонов агента по этому issue: $USED из $LIMIT"
+          if [ "$USED" -ge "$LIMIT" ]; then
+            SHA=$(git rev-parse HEAD)
+            gh issue comment "$ISSUE" --body "limit_exhausted: бюджет запусков агента исчерпан ($USED/$LIMIT). Последний SHA: \`$SHA\`. Логи: https://${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. Нужен человек."
+            echo "exhausted=true" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Toolchain (Java, Node, pnpm — для тестов агента)
+        if: steps.budget.outputs.exhausted != 'true'
+        uses: jdx/mise-action@v5
+
       - name: Run OpenCode
+        id: opencode
+        if: steps.budget.outputs.exhausted != 'true'
         uses: anomalyco/opencode/github@latest
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
@@ -45,3 +70,17 @@ jobs:
           # share: false — явный запрет автопубликации сессий (для публичных
           # репозиториев экшен по умолчанию шарит); решение по share — manual
           share: "false"
+
+      - name: Report failure reason (без модели)
+        if: failure() && steps.budget.outputs.exhausted != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          SHA=$(git rev-parse HEAD)
+          case "${{ steps.opencode.outcome }}" in
+            cancelled) REASON="timeout" ;;
+            failure)   REASON="agent_failed (или infra — по логам)" ;;
+            *)         REASON="agent_failed" ;;
+          esac
+          gh issue comment "$ISSUE" --body "Автопрогон агента завершился ошибкой: \`$REASON\`. Последний SHA: \`$SHA\`. Логи: https://${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. Нужен человек."

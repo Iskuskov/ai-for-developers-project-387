@@ -1,0 +1,70 @@
+name: opencode-review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+# новое ревью отменяет устаревшее того же PR; пустые прогоны ботов — в своей группе
+concurrency:
+  group: ${{ github.event.sender.type == 'Bot' && format('opencode-review-bot-{0}', github.event.pull_request.id) || format('opencode-review-{0}', github.event.pull_request.number) }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # ветки своего репозитория; чужих ботов не ревьюим; СВОЙ агент (PR от
+    # opencode-agent) ревьюится — иначе авторевью агентских PR никогда не сработает
+    if: |
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (github.event.sender.type != 'Bot' || github.event.sender.login == 'opencode-agent[bot]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: read
+      actions: read
+      checks: read
+      statuses: read
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Install opencode (V2)
+        run: curl -fsSL https://opencode.ai/v2/install | bash
+
+      - name: Run OpenCode review
+        id: review
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          mkdir -p /tmp/review
+          opencode run --model opencode/big-pickle "$(cat <<'PROMPT'
+          Ты — независимый ревьюер этого pull request. Ты НЕ продолжаешь сессию реализации и НЕ правишь код.
+          Прочитай:
+          1. REVIEW.md — критерии ревью календаря.
+          2. Описание PR и связанные issue (обращение, спецификация, тикеты) — по ссылкам из описания; проверь, что изменение не выходит за согласованный объём, иначе отметь это замечанием.
+          3. Дифф: gh pr diff ${PR_NUMBER}
+          4. Результаты CI: gh pr checks ${PR_NUMBER}
+          Каждое замечание: файл, строка, условия ошибки, её последствие. Форматирование — работа линтера, не замечание.
+          Если подтверждённых дефектов нет — напиши это прямо.
+          Сохрани текст ревью в файл /tmp/review/review.md
+          PROMPT
+          )" > /tmp/review/stdout.log 2>&1
+          test -s /tmp/review/review.md || { cat /tmp/review/stdout.log; exit 1; }
+
+      - name: Post review
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -s /tmp/review/review.md ]; then
+            gh pr comment "$PR_NUMBER" --body-file /tmp/review/review.md
+          else
+            gh pr comment "$PR_NUMBER" --body "agent_failed: ревью не сформировано — см. лог прогона."
+          fi

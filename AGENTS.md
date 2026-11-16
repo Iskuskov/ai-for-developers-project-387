@@ -31,7 +31,7 @@
 
 ## GitHub-агент
 
-Агент OpenCode подключён к репозиторию через воркфлоу `.github/workflows/opencode.yml`: задаёте задание комментарием `/oc <задание>` или `/opencode <задание>` в issue или PR — агент отвечает комментарием (полный лог — в Actions). Новые issue автоматически разбирает воркфлоу `.github/workflows/opencode-triage.yml` (метка + комментарий-разбор; тикеты с меткой `ready-for-agent` не переразбираются). Команды доступны доверенным участникам (владелец и коллабораторы); модель — `opencode/big-pickle` (бесплатная). Подробнее — в [README](README.md#агент-в-github-opencode).
+Агент OpenCode подключён к репозиторию через воркфлоу `.github/workflows/opencode.yml`: задаёте задание комментарием `/oc <задание>` или `/opencode <задание>` в issue или PR — агент отвечает комментарием (полный лог — в Actions; бюджет запусков на PR — переменная `OPENCODE_PR_BUDGET`, по умолчанию 3). Новые issue автоматически разбирает воркфлоу `.github/workflows/opencode-triage.yml` (метка + комментарий-разбор; тикеты с меткой `ready-for-agent` не переразбираются). Каждый PR автоматически ревьюит независимый агент — `.github/workflows/opencode-review.yml` по критериям [REVIEW.md](REVIEW.md); замечания передаются агенту командой `/oc`. Команды доступны доверенным участникам (владелец и коллабораторы); модель — `opencode/big-pickle` (бесплатная). Подробнее — в [README](README.md#авторевью-pr-opencode).
 
 ## Agent skills
 
