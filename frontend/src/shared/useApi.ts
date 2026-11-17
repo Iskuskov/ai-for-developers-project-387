@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 
-/** Успешный ответ SDK: у клиента hey-api поле data опционально. */
+/** Ответ SDK: у клиента hey-api поля data и error опциональны. */
 export interface ApiResult<T> {
   data?: T
+  error?: unknown
 }
 
 /**
@@ -24,7 +25,11 @@ export function useApi<T>(
     load()
       .then((result) => {
         if (!cancelled) {
-          setData(result.data ?? null)
+          if (result.error) {
+            setHasError(true)
+          } else {
+            setData(result.data ?? null)
+          }
         }
       })
       .catch(() => {

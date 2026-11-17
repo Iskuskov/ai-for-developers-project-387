@@ -121,6 +121,33 @@ paths:
                 $ref: '#/components/schemas/ApiError'
       tags:
         - EventTypes
+    delete:
+      operationId: deleteEventType
+      description: Удаление типа встречи владельцем.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Идентификатор типа встречи.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Тип встречи удалён.
+        '404':
+          description: Тип встречи не найден.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Тип встречи используется предстоящими записями.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      tags:
+        - EventTypes
   /slots:
     get:
       operationId: listSlots

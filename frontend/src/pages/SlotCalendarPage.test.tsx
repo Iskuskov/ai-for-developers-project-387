@@ -1,4 +1,5 @@
 import { render, screen, userEvent, within } from '../../test-utils'
+import { Loader } from '@mantine/core'
 import { Route, Routes } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createBooking, listEventTypes, listSlots } from '../shared/api'
@@ -69,7 +70,7 @@ describe('SlotCalendarPage', () => {
       query: { eventTypeId: 'consultation', date: expect.any(String) },
     })
 
-    expect(screen.getByRole('button', { name: '09:00' })).toBeEnabled()
+    expect(await screen.findByRole('button', { name: '09:00' })).toBeEnabled()
     expect(screen.getByRole('button', { name: '10:00' })).toBeDisabled()
   })
 
@@ -176,5 +177,39 @@ describe('SlotCalendarPage', () => {
 
     expect(await screen.findByText('Некорректный email')).toBeInTheDocument()
     expect(listSlotsMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows an error and no calendar or loader when loading event types fails', async () => {
+    listEventTypesMock.mockResolvedValue({
+      error: new Error('network error'),
+    } as Awaited<ReturnType<typeof listEventTypes>>)
+    const { container } = renderCalendarPage()
+
+    expect(await screen.findByText('Не удалось загрузить типы встреч')).toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'Дни записи' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '09:00' })).not.toBeInTheDocument()
+    expect(container.querySelector(`.${Loader.classes.root}`)).not.toBeInTheDocument()
+    expect(listSlotsMock).not.toHaveBeenCalled()
+  })
+
+  it('shows a friendly message when the linked event type no longer exists', async () => {
+    listEventTypesMock.mockResolvedValue({
+      data: [
+        {
+          id: 'greeting',
+          title: 'Знакомство',
+          description: 'Короткий звонок, чтобы познакомиться.',
+          durationMinutes: 15,
+        },
+      ],
+    } as Awaited<ReturnType<typeof listEventTypes>>)
+    renderCalendarPage()
+
+    expect(
+      await screen.findByText('Этот тип встреч больше не доступен для записи'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'Дни записи' })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Имя')).not.toBeInTheDocument()
+    expect(listSlotsMock).not.toHaveBeenCalled()
   })
 })

@@ -25,6 +25,11 @@ public interface BookingOccupancy {
   /** Предстоящие Записи всех Типов встреч (старт не раньше now) по возрастанию времени старта. */
   List<Booking> findUpcoming(LocalDateTime now);
 
+  /** Есть ли у указанного Типа встречи предстоящие Записи (старт не раньше now). */
+  boolean hasUpcomingFor(String eventTypeId, LocalDateTime now);
+
+  Object reservationMonitor();
+
   /**
    * Атомарно занимает полуинтервал [старт Записи, старт + duration) новой Записью: если он не
    * пересекается с уже занятыми интервалами, Запись сохраняется и возвращается true; иначе

@@ -40,6 +40,13 @@ interface EventTypes {
   @operationId("createEventType")
   @doc("Создание типа встречи владельцем.")
   @post create(@body requestBody: EventTypeInput): CreatedEventType | ValidationError;
+
+  @operationId("deleteEventType")
+  @doc("Удаление типа встречи владельцем.")
+  @delete remove(
+    @doc("Идентификатор типа встречи.")
+    @path id: string,
+  ): DeletedEventType | NotFoundError | EventTypeInUseError;
 }
 
 @doc("Данные для создания типа встречи: название, описание и длительность.")
@@ -63,6 +70,11 @@ model CreatedEventType {
   @body body: EventType;
 }
 
+@doc("Тип встречи удалён.")
+model DeletedEventType {
+  @statusCode statusCode: 204;
+}
+
 @doc("Ошибка запроса: машиночитаемый код и сообщение для человека.")
 model ApiError {
   @doc("Машиночитаемый код ошибки.")
@@ -84,6 +96,14 @@ model ValidationError {
 @error
 model NotFoundError {
   @statusCode statusCode: 404;
+
+  @body body: ApiError;
+}
+
+@doc("Тип встречи используется предстоящими записями.")
+@error
+model EventTypeInUseError {
+  @statusCode statusCode: 409;
 
   @body body: ApiError;
 }

@@ -30,6 +30,12 @@ public class ApiExceptionHandler {
         .body(new ApiError("EVENT_TYPE_NOT_FOUND", exception.getMessage()));
   }
 
+  @ExceptionHandler(EventTypeInUseException.class)
+  public ResponseEntity<ApiError> eventTypeInUse(EventTypeInUseException exception) {
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(new ApiError("EVENT_TYPE_IN_USE", exception.getMessage()));
+  }
+
   @ExceptionHandler(SlotTakenException.class)
   public ResponseEntity<ApiError> slotTaken(SlotTakenException exception) {
     return ResponseEntity.status(HttpStatus.CONFLICT)

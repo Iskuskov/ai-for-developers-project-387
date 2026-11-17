@@ -206,6 +206,40 @@ export type CreateEventTypeResponses = {
 
 export type CreateEventTypeResponse = CreateEventTypeResponses[keyof CreateEventTypeResponses];
 
+export type DeleteEventTypeData = {
+    body?: never;
+    path: {
+        /**
+         * Идентификатор типа встречи.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/event-types/{id}';
+};
+
+export type DeleteEventTypeErrors = {
+    /**
+     * Тип встречи не найден.
+     */
+    404: ApiError;
+    /**
+     * Тип встречи используется предстоящими записями.
+     */
+    409: ApiError;
+};
+
+export type DeleteEventTypeError = DeleteEventTypeErrors[keyof DeleteEventTypeErrors];
+
+export type DeleteEventTypeResponses = {
+    /**
+     * Тип встречи удалён.
+     */
+    204: void;
+};
+
+export type DeleteEventTypeResponse = DeleteEventTypeResponses[keyof DeleteEventTypeResponses];
+
 export type GetEventTypeData = {
     body?: never;
     path: {

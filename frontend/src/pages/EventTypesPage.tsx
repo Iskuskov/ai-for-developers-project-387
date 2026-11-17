@@ -1,4 +1,5 @@
 import {
+  ActionIcon,
   Anchor,
   Box,
   Button,
@@ -6,6 +7,7 @@ import {
   Divider,
   Group,
   Loader,
+  Modal,
   NumberInput,
   Stack,
   Text,
@@ -16,7 +18,7 @@ import {
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router'
-import { createEventType, listEventTypes } from '../shared/api'
+import { createEventType, deleteEventType, listEventTypes } from '../shared/api'
 import type { EventType } from '../shared/api'
 import { EventTypeCard } from '../shared/EventTypeCard'
 import { AppHeader } from '../shared/AppHeader'
@@ -26,11 +28,17 @@ export function EventTypesPage() {
   const { data: fetchedTypes, hasError } = useApi(listEventTypes, [])
   // Созданные владельцем Типы встреч добавляются к загруженному списку без повторного запроса
   const [createdTypes, setCreatedTypes] = useState<EventType[]>([])
-  const eventTypes = [...(fetchedTypes ?? []), ...createdTypes]
+  const [removedIds, setRemovedIds] = useState<string[]>([])
+  const eventTypes = [...(fetchedTypes ?? []), ...createdTypes].filter(
+    (eventType) => !removedIds.includes(eventType.id),
+  )
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [durationMinutes, setDurationMinutes] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
+  const [deletingType, setDeletingType] = useState<EventType | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -51,6 +59,32 @@ export function EventTypesPage() {
     }
   }
 
+  function openDeleteModal(eventType: EventType) {
+    setDeleteError(null)
+    setDeletingType(eventType)
+  }
+
+  function closeDeleteModal() {
+    if (isDeleting) return
+    setDeletingType(null)
+    setDeleteError(null)
+  }
+
+  async function handleDelete() {
+    const id = deletingType?.id
+    if (!id) return
+    setIsDeleting(true)
+    setDeleteError(null)
+    const result = await deleteEventType({ path: { id } })
+    setIsDeleting(false)
+    if (result.error) {
+      setDeleteError(result.error.message)
+      return
+    }
+    setRemovedIds((current) => [...current, id])
+    setDeletingType(null)
+  }
+
   return (
     <Box mih="100vh" bg="gray.0">
       <AppHeader />
@@ -66,7 +100,34 @@ export function EventTypesPage() {
           {!hasError && fetchedTypes !== null && (
             <Stack gap="sm">
               {eventTypes.map((eventType) => (
-                <EventTypeCard key={eventType.id} eventType={eventType} />
+                <EventTypeCard key={eventType.id} eventType={eventType}>
+                  <Group justify="flex-end">
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      aria-label="Удалить"
+                      disabled={isDeleting}
+                      onClick={() => openDeleteModal(eventType)}
+                    >
+                      <svg
+                        aria-hidden="true"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M3 6h18" />
+                        <path d="M8 6V4h8v2" />
+                        <path d="M19 6l-1 14H6L5 6" />
+                        <path d="M10 11v5M14 11v5" />
+                      </svg>
+                    </ActionIcon>
+                  </Group>
+                </EventTypeCard>
               ))}
             </Stack>
           )}
@@ -104,6 +165,25 @@ export function EventTypesPage() {
           </Anchor>
         </Stack>
       </Container>
+      <Modal
+        opened={deletingType !== null}
+        onClose={closeDeleteModal}
+        title="Удалить тип встречи?"
+        centered
+      >
+        <Stack gap="md">
+          <Text>Тип «{deletingType?.title}» будет удалён насовсем. Отменить это будет нельзя.</Text>
+          {deleteError && <Text c="red">{deleteError}</Text>}
+          <Group justify="flex-end">
+            <Button variant="default" onClick={closeDeleteModal} disabled={isDeleting}>
+              Отмена
+            </Button>
+            <Button color="red" onClick={handleDelete} loading={isDeleting} disabled={isDeleting}>
+              Удалить
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Box>
   )
 }
