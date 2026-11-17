@@ -96,7 +96,9 @@ run = "cd frontend && pnpm build"
 
 [tasks."check:e2e"]
 description = "Сквозной браузерный сценарий (Playwright) на живом стеке: бекенд + собранный фронтенд"
-depends = ["build:frontend", "install:playwright"]
+# строго после test:backend: параллельный gradlew bootRun и gradlew test
+# дерутся за backend/build (main-class не резолвится на пустых классах)
+depends = ["test:backend", "build:frontend", "install:playwright"]
 run = "cd frontend && pnpm exec playwright test"
 
 [tasks.check]
