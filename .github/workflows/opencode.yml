@@ -44,8 +44,10 @@ jobs:
           LIMIT: ${{ vars.OPENCODE_PR_BUDGET || '3' }}
         run: |
           TITLE=$(gh api "repos/${{ github.repository }}/issues/$ISSUE" --jq .title)
+          # бюджет считает прогоны после включения механизма (2026-11-17):
+          # история до него не должна мгновенно исчерпывать лимит
           USED=$(gh api "repos/${{ github.repository }}/actions/runs?event=issue_comment&per_page=100" \
-            --jq "[.workflow_runs[] | select(.name == \"opencode\" and .display_title == \"$TITLE\")] | length")
+            --jq "[.workflow_runs[] | select(.name == \"opencode\" and .display_title == \"$TITLE\" and .created_at >= \"2026-11-17T07:00:00Z\")] | length")
           echo "Прогонов агента по этому issue: $USED из $LIMIT"
           if [ "$USED" -ge "$LIMIT" ]; then
             SHA=$(git rev-parse HEAD)
