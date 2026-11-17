@@ -50,7 +50,7 @@ jobs:
           if [ "$USED" -ge "$LIMIT" ]; then
             SHA=$(git rev-parse HEAD)
             gh issue comment "$ISSUE" --body "limit_exhausted: бюджет запусков агента исчерпан ($USED/$LIMIT). Последний SHA: \`$SHA\`. Логи: https://${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. Нужен человек."
-            echo "exhausted=true" >> $GITHUB_OUTPUT
+            echo "exhausted=true" >> "$GITHUB_OUTPUT"
             exit 1
           fi
 
