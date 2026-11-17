@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.1.0](https://github.com/Iskuskov/ai-for-developers-project-387/compare/v1.0.1...v1.1.0) (2026-11-17)
+
+
+### Features
+
+* авторевью PR, бюджет запусков агента, шаблон PR и REVIEW.md ([68a78b6](https://github.com/Iskuskov/ai-for-developers-project-387/commit/68a78b613487c924078a57c30fced46a59fcb0e9))
+* автотриаж новых issues воркфлоу opencode-triage ([5b77cb8](https://github.com/Iskuskov/ai-for-developers-project-387/commit/5b77cb84c126849e892253eab4032e45e5104021))
+* блокировка удаления типа встречи при предстоящих записях ([#7](https://github.com/Iskuskov/ai-for-developers-project-387/issues/7)) ([9f5a83a](https://github.com/Iskuskov/ai-for-developers-project-387/commit/9f5a83a8af36fe8fa511157196754a7ebd05f267))
+* браузерная проверка PR из head SHA с артефактом trace+SHA ([b2e31ef](https://github.com/Iskuskov/ai-for-developers-project-387/commit/b2e31eff751a5585d159f2ab8ed54eb5d091153b))
+* дружелюбное сообщение гостю для удалённого типа встречи ([#8](https://github.com/Iskuskov/ai-for-developers-project-387/issues/8)) ([b81bdf2](https://github.com/Iskuskov/ai-for-developers-project-387/commit/b81bdf2ed3332fe1a4298da401a1691e062ac406))
+* удаление типа встречи с карточки ([#6](https://github.com/Iskuskov/ai-for-developers-project-387/issues/6)) ([0064027](https://github.com/Iskuskov/ai-for-developers-project-387/commit/0064027dc9413cf5c9e0558a9e6d36a963b1241c))
+* удаление типов встреч ([#6](https://github.com/Iskuskov/ai-for-developers-project-387/issues/6)) ([00cae9e](https://github.com/Iskuskov/ai-for-developers-project-387/commit/00cae9edd5c2719f5dd65352382f3b93b24f84dc))
+
+
+### Bug Fixes
+
+* бюджет считает прогоны после включения механизма ([2ae29db](https://github.com/Iskuskov/ai-for-developers-project-387/commit/2ae29db56c28c2c591f56785048f11aeb719400e))
+* гнать gen:client до задач фронтенда и сериализовать файлы Vitest ([98822be](https://github.com/Iskuskov/ai-for-developers-project-387/commit/98822be181a13faf20e5b2845c73bed954e7d4df))
+* закавычить GITHUB_OUTPUT в бюджет-скрипте, закрепить shellcheck локально ([ea7196e](https://github.com/Iskuskov/ai-for-developers-project-387/commit/ea7196eb1ffb0d6be4f10d9886b451d824c0f81f))
+* запретить интерактивные вопросы агенту и укоротить таймаут до 15 минут ([60614d6](https://github.com/Iskuskov/ai-for-developers-project-387/commit/60614d6f87ff53ceb07e56eb8ffa06808dd7b0ed))
+* обработка error SDK и атомарное удаление типа встречи ([#6](https://github.com/Iskuskov/ai-for-developers-project-387/issues/6)) ([b1f8365](https://github.com/Iskuskov/ai-for-developers-project-387/commit/b1f83650e8680b718b728212fc6f4fed2e62120c))
+* перевести воркфлоу агента на бесплатную модель mimo-v2.6-flash-free ([45fead2](https://github.com/Iskuskov/ai-for-developers-project-387/commit/45fead2df08eca35714d22531e15c03931373065))
+* перевести воркфлоу агента на доступную бесплатную модель big-pickle ([8878120](https://github.com/Iskuskov/ai-for-developers-project-387/commit/8878120a513f79812a46a3917c1492c5dc114213))
+* пиннить экшен агента на ветке 2.0 и opencode v2.3.0 через VERSION ([f47bedd](https://github.com/Iskuskov/ai-for-developers-project-387/commit/f47beddf15db953f25c59207b08431e5291fa7dd))
+* поддержка pull_request_review_comment в бюджете и репортере (issue||pull_request) ([3257a82](https://github.com/Iskuskov/ai-for-developers-project-387/commit/3257a823f757dcf7207348b99fc76a07e6dbf961))
+* поднять таймаут джоба агента до 30 минут для длинных задач ([b150fce](https://github.com/Iskuskov/ai-for-developers-project-387/commit/b150fce1ab993db9dc5dfcab0749f875845526e4))
+* права агента в V1-форме (external_directory allow, question deny), экшен на [@latest](https://github.com/latest) ([353de5b](https://github.com/Iskuskov/ai-for-developers-project-387/commit/353de5b1cf01a01e4c73482cc971987c0c321dbe))
+* права агента в V1-форме permission — экшен ставит opencode 1.x ([dbad535](https://github.com/Iskuskov/ai-for-developers-project-387/commit/dbad535644f03134e7eb8bc9c1eef7f720d02a3f))
+* право issues write для бюджет-репортера, exhausted до комментария ([cbf7b82](https://github.com/Iskuskov/ai-for-developers-project-387/commit/cbf7b82d6607d049a67a01754021191655055ae2))
+* разрешить агенту чтение внешних каталогов на раннере (external_directory) ([47b4e4e](https://github.com/Iskuskov/ai-for-developers-project-387/commit/47b4e4e7b319cdc9cd968a22aa0354c6bc8fd44f))
+* сообщение об ошибке загрузки типов вместо вечного лоадера ([#8](https://github.com/Iskuskov/ai-for-developers-project-387/issues/8)) ([8809cad](https://github.com/Iskuskov/ai-for-developers-project-387/commit/8809cad2fc178e85622ec51c2a5f6408341518e1))
+* таймаут 25 минут для по-тикетной реализации, бюджет через переменную ([db37e59](https://github.com/Iskuskov/ai-for-developers-project-387/commit/db37e5948fd4bf959e5e63e0b65844d3edb3778b))
+* учебная находка tap-targets — не пересекается с существующими задачами ([93ca119](https://github.com/Iskuskov/ai-for-developers-project-387/commit/93ca1195518393de4107254f216dce864627f8af))
+* учебный отчёт через jq вместо heredoc ([189f402](https://github.com/Iskuskov/ai-for-developers-project-387/commit/189f402d7616fae0670fcc92a111232347272541))
+* экшен агента из форка с прибитой версией (иммунитет к rate-limit api.github.com) ([a0f3217](https://github.com/Iskuskov/ai-for-developers-project-387/commit/a0f321763a5bb8fb6963921955496a1742ee4c43))
+* явно запретить автопубликацию сессий экшеном (share=false) ([d709643](https://github.com/Iskuskov/ai-for-developers-project-387/commit/d709643660f2cefb6fda96f73e83b63e11ba4629))
+
 ## [1.0.1](https://github.com/Iskuskov/ai-for-developers-project-387/compare/v1.0.0...v1.0.1) (2026-11-15)
 
 
