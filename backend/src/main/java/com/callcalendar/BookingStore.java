@@ -38,6 +38,13 @@ public class BookingStore implements BookingOccupancy {
         .toList();
   }
 
+  /** Предстоящие Записи Типа встречи: та же семантика «предстоящих», что у findUpcoming. */
+  @Override
+  public boolean hasUpcomingFor(String eventTypeId, LocalDateTime now) {
+    return findUpcoming(now).stream()
+        .anyMatch(booking -> booking.eventTypeId().equals(eventTypeId));
+  }
+
   @Override
   public synchronized boolean reserve(Booking booking, Duration duration) {
     LocalDateTime start = booking.slotStart();

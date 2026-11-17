@@ -112,4 +112,29 @@ describe('EventTypesPage', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Знакомство' })).toBeInTheDocument()
   })
+
+  it('показывает ошибку 409 внутри открытой модалки и оставляет Тип в списке', async () => {
+    deleteEventTypeMock.mockResolvedValue({
+      error: {
+        code: 'EVENT_TYPE_IN_USE',
+        message: 'Нельзя удалить тип встречи: на него есть предстоящие записи',
+      },
+    } as Awaited<ReturnType<typeof deleteEventType>>)
+    const user = userEvent.setup()
+    render(<EventTypesPage />)
+
+    expect(await screen.findByRole('heading', { name: 'Знакомство' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Удалить' }))
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Удалить' }))
+
+    expect(
+      await within(dialog).findByText(
+        'Нельзя удалить тип встречи: на него есть предстоящие записи',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Знакомство' })).toBeInTheDocument()
+  })
 })

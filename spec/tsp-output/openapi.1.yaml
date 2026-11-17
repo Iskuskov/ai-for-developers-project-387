@@ -140,6 +140,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Тип встречи используется предстоящими записями.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
       tags:
         - EventTypes
   /slots:

@@ -46,7 +46,7 @@ interface EventTypes {
   @delete remove(
     @doc("Идентификатор типа встречи.")
     @path id: string,
-  ): DeletedEventType | NotFoundError;
+  ): DeletedEventType | NotFoundError | EventTypeInUseError;
 }
 
 @doc("Данные для создания типа встречи: название, описание и длительность.")
@@ -96,6 +96,14 @@ model ValidationError {
 @error
 model NotFoundError {
   @statusCode statusCode: 404;
+
+  @body body: ApiError;
+}
+
+@doc("Тип встречи используется предстоящими записями.")
+@error
+model EventTypeInUseError {
+  @statusCode statusCode: 409;
 
   @body body: ApiError;
 }

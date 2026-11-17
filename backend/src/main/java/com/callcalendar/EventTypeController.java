@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,8 +28,14 @@ public class EventTypeController {
 
   private final EventTypeStore store;
 
-  public EventTypeController(EventTypeStore store) {
+  private final BookingOccupancy bookings;
+
+  private final Clock clock;
+
+  public EventTypeController(EventTypeStore store, BookingOccupancy bookings, Clock clock) {
     this.store = store;
+    this.bookings = bookings;
+    this.clock = clock;
   }
 
   @Operation(
@@ -89,6 +97,10 @@ public class EventTypeController {
     @ApiResponse(
         responseCode = "404",
         description = "Тип встречи не найден.",
+        content = @Content(schema = @Schema(implementation = ApiError.class))),
+    @ApiResponse(
+        responseCode = "409",
+        description = "Тип встречи используется предстоящими записями.",
         content = @Content(schema = @Schema(implementation = ApiError.class)))
   })
   @DeleteMapping(value = "/event-types/{id}", produces = "application/json")
@@ -100,8 +112,13 @@ public class EventTypeController {
               description = "Идентификатор типа встречи.",
               required = true)
           String id) {
-    if (!store.delete(id)) {
+    if (store.findById(id).isEmpty()) {
       throw new EventTypeNotFoundException(id, HttpStatus.NOT_FOUND);
     }
+    LocalDateTime now = clock.instant().atZone(SlotService.WORK_ZONE).toLocalDateTime();
+    if (bookings.hasUpcomingFor(id, now)) {
+      throw new EventTypeInUseException();
+    }
+    store.delete(id);
   }
 }

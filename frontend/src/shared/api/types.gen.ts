@@ -223,6 +223,10 @@ export type DeleteEventTypeErrors = {
      * Тип встречи не найден.
      */
     404: ApiError;
+    /**
+     * Тип встречи используется предстоящими записями.
+     */
+    409: ApiError;
 };
 
 export type DeleteEventTypeError = DeleteEventTypeErrors[keyof DeleteEventTypeErrors];
