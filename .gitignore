@@ -11,3 +11,4 @@ spec/node_modules/
 
 # Локальные переопределения mise
 mise.local.toml
+audit-reports/

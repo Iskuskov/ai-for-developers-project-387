@@ -1,0 +1,91 @@
+name: audit
+
+on:
+  schedule:
+    # ежедневно в 03:17 UTC = 06:17 по Москве (GitHub Actions считает cron в UTC)
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "real — аудит живого приложения; sample — учебный отчёт с подготовленной находкой"
+        type: choice
+        options:
+          - real
+          - sample
+        default: real
+
+# параллельные аудиты не нужны: новое расписание/запуск отменяет старый
+concurrency:
+  group: opencode-audit
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Каталог отчётов (вне коммитов)
+        run: |
+          mkdir -p audit-reports
+          echo "audit-reports/" >> .git/info/exclude
+          echo "MODE=${{ inputs.mode || 'real' }}" >> "$GITHUB_ENV"
+
+      - name: Аудит приложения (real) или учебный отчёт (sample)
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          if [ "$MODE" = "sample" ]; then
+            # учебный отчёт с подготовленной находкой: задача по нему
+            # помечается агентом как учебная и не является дефектом приложения
+            jq -n '{audits: {"render-blocking-resources": {id: "render-blocking-resources", title: "Устраните ресурсы, блокирующие отрисовку", score: 0.3, numericValue: 2100, displayValue: "Потенциальная экономия 2100 мс", details: {type: "opportunity", overallSavingsMs: 2100}}}, categories: {performance: {score: 0.41}}}' > audit-reports/lighthouse-sample.json
+            echo "Учебный отчёт записан: audit-reports/lighthouse-sample.json"
+          else
+            # прогрев: Render Free-план засыпает, первый запрос может занять минуты
+            for i in $(seq 1 36); do
+              curl -sf -o /dev/null "$APP_URL" && { echo "приложение проснулось (попытка $i)"; break; }
+              echo "прогрев $i..."; sleep 5
+            done
+            npx -y lighthouse@12 "$APP_URL" \
+              --output=json --output-path=audit-reports/lighthouse.json \
+              --chrome-flags="--headless" --quiet
+          fi
+          ls -la audit-reports/
+
+      - name: Артефакт с исходным отчётом
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report-${{ github.run_id }}
+          path: audit-reports/
+          if-no-files-found: error
+
+      - name: Run OpenCode (разбор отчёта)
+        id: opencode
+        # форк anomalyco/opencode: шаг версии прибит к v1.19.5 — безтокенный
+        # curl к releases/latest мажорится rate-limit'ом с IP раннеров
+        uses: Iskuskov/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        with:
+          model: opencode/big-pickle
+          # share: false — явный запрет автопубликации сессий; решение по share — manual
+          share: "false"
+          prompt: |
+            Ты — аудитор приложения календаря звонков. Разбери отчёт Lighthouse из каталога audit-reports/
+            (файл lighthouse.json; если его нет — lighthouse-sample.json, тогда это УЧЕБНЫЙ отчёт с подготовленной находкой).
+            Режим аудита: ${{ inputs.mode || 'real' }}, адрес приложения: ${{ vars.APP_URL }}.
+            1. Извлеки находки: проблемы производительности/доступности/best-practices с числами (score, savingsMs) и их смысл для пользователя.
+            2. Дедуп: gh issue list --state open --limit 50 --json number,title,body — если задача по этой же проблеме УЖЕ есть, не создавай дубликат, только упомяни её в выводе.
+            3. По НОВОЙ находке создай issue: заголовок — суть проблемы; тело: описание проблемы с числами, предлагаемое действие, ссылка на отчёт-артефакт и прогон (https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}); если отчёт учебный — пометь задачу «учебная» и укажи, что это не подтверждённый дефект приложения.
+            4. Публикуй вывод комментарием в журнальном issue: найди открытый issue с меткой lighthouse-аудит (если нет — создай с этой меткой, заголовок «Lighthouse-аудит — журнал»). В комментарии: дата, режим, находки или «находок нет», ссылки на отчёт-артефакт, созданные/найденные issues и прогон.
+            5. Если отчёта нет вовсе (приложение недоступно и аудит не выполнился) — вывод «нет данных», а НЕ «дефектов нет».
+            Вопросы интерактивно не задавай; вся отчётность — issue и комментарии.
