@@ -30,6 +30,7 @@ jobs:
       contents: read
       id-token: write
       actions: read
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -51,9 +52,9 @@ jobs:
             --jq "[.workflow_runs[] | select(.name == \"opencode\" and .display_title == \"$TITLE\" and .created_at >= \"2026-11-17T07:00:00Z\")] | length")
           echo "Прогонов агента по этому issue: $USED из $LIMIT"
           if [ "$USED" -ge "$LIMIT" ]; then
+            echo "exhausted=true" >> "$GITHUB_OUTPUT"
             SHA=$(git rev-parse HEAD)
             gh issue comment "$ISSUE" --body "limit_exhausted: бюджет запусков агента исчерпан ($USED/$LIMIT). Последний SHA: \`$SHA\`. Логи: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}. Нужен человек."
-            echo "exhausted=true" >> "$GITHUB_OUTPUT"
             exit 1
           fi
 
