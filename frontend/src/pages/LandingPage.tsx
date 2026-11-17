@@ -41,7 +41,7 @@ export function LandingPage() {
             </Button>
           </Stack>
           <Card withBorder radius="lg" shadow="sm" padding="xl" bg="white">
-            <Title order={3} mb="md">
+            <Title order={2} size="h3" mb="md">
               Что доступно прямо сейчас
             </Title>
             <List spacing="sm" size="sm" c="dimmed">
