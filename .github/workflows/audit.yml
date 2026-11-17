@@ -50,13 +50,22 @@ jobs:
             echo "Учебный отчёт записан: audit-reports/lighthouse-sample.json"
           else
             # прогрев: Render Free-план засыпает, первый запрос может занять минуты
+            WOKE=0
             for i in $(seq 1 36); do
-              curl -sf -o /dev/null "$APP_URL" && { echo "приложение проснулось (попытка $i)"; break; }
+              curl -sf -o /dev/null "$APP_URL" && { echo "приложение проснулось (попытка $i)"; WOKE=1; break; }
               echo "прогрев $i..."; sleep 5
             done
-            npx -y lighthouse@12 "$APP_URL" \
-              --output=json --output-path=audit-reports/lighthouse.json \
-              --chrome-flags="--headless" --quiet
+            # недоступность приложения — валидный исход: агент сообщит «нет данных»,
+            # а не «дефектов нет»; не роняем шаг
+            if [ "$WOKE" != "1" ]; then
+              echo "NO_DATA: приложение недоступно ($APP_URL) — аудит не выполнен" > audit-reports/NO_DATA.txt
+              echo "Приложение не проснулось — записан маркер отсутствия данных"
+            else
+              npx -y lighthouse@12 "$APP_URL" \
+                --output=json --output-path=audit-reports/lighthouse.json \
+                --chrome-flags="--headless" --quiet \
+                || echo "NO_DATA: lighthouse не смог снять отчёт" > audit-reports/NO_DATA.txt
+            fi
           fi
           ls -la audit-reports/
 
@@ -66,7 +75,7 @@ jobs:
         with:
           name: lighthouse-report-${{ github.run_id }}
           path: audit-reports/
-          if-no-files-found: error
+          if-no-files-found: warn
 
       - name: Run OpenCode (разбор отчёта)
         id: opencode
@@ -88,5 +97,5 @@ jobs:
             3. Регресс: если находка совпадает с ЗАКРЫТОЙ задачей (gh issue list --state closed --limit 50 --json number,title,body) — это повторное появление исправленной проблемы. Создай НОВЫЙ issue с пометкой «регресс» в заголовке и в теле со ссылками: прежняя закрытая задача, исправлявший её PR (gh issue view N --json closedByPullRequestsReferences), текущий отчёт.
             4. По НОВОЙ находке создай issue: заголовок — суть проблемы; тело: описание проблемы с числами, предлагаемое действие, ссылка на отчёт-артефакт и прогон (https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}); если отчёт учебный — пометь задачу «учебная» и укажи, что это не подтверждённый дефект приложения.
             5. Публикуй вывод комментарием в журнальном issue: найди открытый issue с меткой lighthouse-аудит (если нет — создай с этой меткой, заголовок «Lighthouse-аудит — журнал»). В комментарии: дата, режим, находки или «находок нет», ссылки на отчёт-артефакт, созданные/найденные issues и прогон.
-            6. Если отчёта нет вовсе (приложение недоступно и аудит не выполнился) — вывод «нет данных»: это НЕ «дефектов нет» и НЕ подтверждение исправления прежних дефектов.
+            6. Если в каталоге только NO_DATA.txt (приложение недоступно, аудит не выполнился) — вывод «нет данных»: это НЕ «дефектов нет» и НЕ подтверждение исправления прежних дефектов.
             Вопросы интерактивно не задавай; вся отчётность — issue и комментарии.
