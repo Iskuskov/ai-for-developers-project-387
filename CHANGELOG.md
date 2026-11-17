@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.0](https://github.com/Iskuskov/ai-for-developers-project-387/compare/v1.1.0...v1.2.0) (2026-11-17)
+
+
+### Features
+
+* детекция регрессов аудита — связка с закрытой задачей и исправляющим PR ([d1e9379](https://github.com/Iskuskov/ai-for-developers-project-387/commit/d1e9379d9a1038bd0e7d38ff4ea375fa85463eda))
+
+
+### Bug Fixes
+
+* e2e строго после test:backend — гонка gradle-процессов на классах ([f5a9817](https://github.com/Iskuskov/ai-for-developers-project-387/commit/f5a9817065b6f34ff8c81161c63d4094c8d0201a))
+* недоступность приложения — маркер NO_DATA и продолжение аудита ([6254589](https://github.com/Iskuskov/ai-for-developers-project-387/commit/62545897888661502073090540f098cc3cd4598a))
+* уровень заголовка карточки на главной — h2 вместо пропущенного уровня ([#14](https://github.com/Iskuskov/ai-for-developers-project-387/issues/14)) ([f100908](https://github.com/Iskuskov/ai-for-developers-project-387/commit/f100908185314e83acc3c426c81c931a3d98268a))
+* уровень заголовка карточки на главной ([#14](https://github.com/Iskuskov/ai-for-developers-project-387/issues/14)) ([ab9383b](https://github.com/Iskuskov/ai-for-developers-project-387/commit/ab9383bc281ab492e27c0b0793cc7494dcbb4b6c))
+
 ## [1.1.0](https://github.com/Iskuskov/ai-for-developers-project-387/compare/v1.0.1...v1.1.0) (2026-11-17)
 
 
