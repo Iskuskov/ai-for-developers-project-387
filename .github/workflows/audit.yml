@@ -46,7 +46,7 @@ jobs:
           if [ "$MODE" = "sample" ]; then
             # учебный отчёт с подготовленной находкой: задача по нему
             # помечается агентом как учебная и не является дефектом приложения
-            jq -n '{audits: {"render-blocking-resources": {id: "render-blocking-resources", title: "Устраните ресурсы, блокирующие отрисовку", score: 0.3, numericValue: 2100, displayValue: "Потенциальная экономия 2100 мс", details: {type: "opportunity", overallSavingsMs: 2100}}}, categories: {performance: {score: 0.41}}}' > audit-reports/lighthouse-sample.json
+            jq -n '{audits: {"tap-targets": {id: "tap-targets", title: "Цели нажатия недостаточного размера", score: 0, numericValue: 0, displayValue: "0% подходящих целей нажатия", details: {type: "opportunity", overallSavingsMs: 0}}}, categories: {accessibility: {score: 0.77}}}' > audit-reports/lighthouse-sample.json
             echo "Учебный отчёт записан: audit-reports/lighthouse-sample.json"
           else
             # прогрев: Render Free-план засыпает, первый запрос может занять минуты
