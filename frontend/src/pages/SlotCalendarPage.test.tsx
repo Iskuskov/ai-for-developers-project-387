@@ -177,4 +177,25 @@ describe('SlotCalendarPage', () => {
     expect(await screen.findByText('Некорректный email')).toBeInTheDocument()
     expect(listSlotsMock).toHaveBeenCalledTimes(1)
   })
+
+  it('shows a friendly message when the linked event type no longer exists', async () => {
+    listEventTypesMock.mockResolvedValue({
+      data: [
+        {
+          id: 'greeting',
+          title: 'Знакомство',
+          description: 'Короткий звонок, чтобы познакомиться.',
+          durationMinutes: 15,
+        },
+      ],
+    } as Awaited<ReturnType<typeof listEventTypes>>)
+    renderCalendarPage()
+
+    expect(
+      await screen.findByText('Этот тип встреч больше не доступен для записи'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('group', { name: 'Дни записи' })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Имя')).not.toBeInTheDocument()
+    expect(listSlotsMock).not.toHaveBeenCalled()
+  })
 })

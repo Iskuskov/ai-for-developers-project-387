@@ -54,6 +54,7 @@ export function SlotCalendarPage() {
   const { eventTypeId } = useParams()
   const { data: eventTypes } = useApi(listEventTypes, [eventTypeId])
   const eventType = eventTypes?.find((type) => type.id === eventTypeId) ?? null
+  const eventTypeMissing = eventTypes !== null && eventType === null
   const [selectedDate, setSelectedDate] = useState(() => moscowTodayIso())
   const [selectedStart, setSelectedStart] = useState<string | null>(null)
   const [guestName, setGuestName] = useState('')
@@ -67,10 +68,10 @@ export function SlotCalendarPage() {
     hasError,
   } = useApi<Slot[]>(
     () =>
-      eventTypeId
+      eventTypeId && eventType
         ? listSlots({ query: { eventTypeId, date: selectedDate } })
         : Promise.resolve({ data: undefined }),
-    [eventTypeId, selectedDate, reloadToken],
+    [eventTypeId, eventType, selectedDate, reloadToken],
   )
 
   const days = useMemo(() => {
@@ -117,6 +118,23 @@ export function SlotCalendarPage() {
     setSelectedDate(date)
     // Смена дня сбрасывает выбранный слот: сетка загружается заново
     setSelectedStart(null)
+  }
+
+  if (eventTypeMissing) {
+    return (
+      <Box mih="100vh" bg="gray.0">
+        <AppHeader />
+        <Container size="sm" py="xl">
+          <Stack gap="md">
+            <Title order={2}>Календарь записи</Title>
+            <Text>Этот тип встреч больше не доступен для записи</Text>
+            <Anchor component={Link} to="/booking" size="sm">
+              ← К типам встреч
+            </Anchor>
+          </Stack>
+        </Container>
+      </Box>
+    )
   }
 
   return (
