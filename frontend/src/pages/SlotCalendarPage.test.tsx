@@ -1,4 +1,5 @@
 import { render, screen, userEvent, within } from '../../test-utils'
+import { Loader } from '@mantine/core'
 import { Route, Routes } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createBooking, listEventTypes, listSlots } from '../shared/api'
@@ -178,16 +179,16 @@ describe('SlotCalendarPage', () => {
     expect(listSlotsMock).toHaveBeenCalledTimes(1)
   })
 
-  it('shows an error and no calendar when loading event types fails', async () => {
+  it('shows an error and no calendar or loader when loading event types fails', async () => {
     listEventTypesMock.mockResolvedValue({
       error: new Error('network error'),
     } as Awaited<ReturnType<typeof listEventTypes>>)
-    renderCalendarPage()
+    const { container } = renderCalendarPage()
 
     expect(await screen.findByText('Не удалось загрузить типы встреч')).toBeInTheDocument()
     expect(screen.queryByRole('group', { name: 'Дни записи' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '09:00' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
+    expect(container.querySelector(`.${Loader.classes.root}`)).not.toBeInTheDocument()
     expect(listSlotsMock).not.toHaveBeenCalled()
   })
 
