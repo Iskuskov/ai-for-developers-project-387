@@ -4,11 +4,47 @@ on:
   push:
     branches:
       - '**'
+  pull_request:
 
 jobs:
   check:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v5
       - run: mise run check
+
+  # независимая браузерная проверка PR: строго из head SHA автора
+  # (checkout без ref на pull_request дал бы временный merge-коммит)
+  browser-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Fixate head SHA
+        run: |
+          ACTUAL=$(git rev-parse HEAD)
+          echo "head sha: $ACTUAL (ожидался ${{ github.event.pull_request.head.sha }})"
+          echo "$ACTUAL" > head-sha.txt
+      - uses: jdx/mise-action@v5
+      - name: Browser e2e (основной и соседний сценарии)
+        run: |
+          mise run install:frontend
+          mise run build:frontend
+          mise run install:playwright
+          cd frontend && pnpm exec playwright test --trace on
+      - name: Артефакт (trace + скриншоты + SHA)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-browser-check-${{ github.event.pull_request.number }}
+          path: |
+            frontend/test-results/
+            head-sha.txt
+          if-no-files-found: error
