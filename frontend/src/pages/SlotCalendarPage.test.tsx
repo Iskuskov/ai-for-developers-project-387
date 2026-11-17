@@ -69,7 +69,7 @@ describe('SlotCalendarPage', () => {
       query: { eventTypeId: 'consultation', date: expect.any(String) },
     })
 
-    expect(screen.getByRole('button', { name: '09:00' })).toBeEnabled()
+    expect(await screen.findByRole('button', { name: '09:00' })).toBeEnabled()
     expect(screen.getByRole('button', { name: '10:00' })).toBeDisabled()
   })
 
@@ -179,7 +179,9 @@ describe('SlotCalendarPage', () => {
   })
 
   it('shows an error and no calendar when loading event types fails', async () => {
-    listEventTypesMock.mockRejectedValue(new Error('network error'))
+    listEventTypesMock.mockResolvedValue({
+      error: new Error('network error'),
+    } as Awaited<ReturnType<typeof listEventTypes>>)
     renderCalendarPage()
 
     expect(await screen.findByText('Не удалось загрузить типы встреч')).toBeInTheDocument()

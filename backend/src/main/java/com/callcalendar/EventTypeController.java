@@ -112,13 +112,15 @@ public class EventTypeController {
               description = "Идентификатор типа встречи.",
               required = true)
           String id) {
-    if (store.findById(id).isEmpty()) {
-      throw new EventTypeNotFoundException(id, HttpStatus.NOT_FOUND);
+    synchronized (bookings.reservationMonitor()) {
+      if (store.findById(id).isEmpty()) {
+        throw new EventTypeNotFoundException(id, HttpStatus.NOT_FOUND);
+      }
+      LocalDateTime now = clock.instant().atZone(SlotService.WORK_ZONE).toLocalDateTime();
+      if (bookings.hasUpcomingFor(id, now)) {
+        throw new EventTypeInUseException();
+      }
+      store.delete(id);
     }
-    LocalDateTime now = clock.instant().atZone(SlotService.WORK_ZONE).toLocalDateTime();
-    if (bookings.hasUpcomingFor(id, now)) {
-      throw new EventTypeInUseException();
-    }
-    store.delete(id);
   }
 }

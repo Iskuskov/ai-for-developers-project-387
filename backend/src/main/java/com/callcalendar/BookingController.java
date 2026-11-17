@@ -76,10 +76,12 @@ public class BookingController {
   @PostMapping(value = "/bookings", consumes = "application/json", produces = "application/json")
   @ResponseStatus(HttpStatus.CREATED)
   public BookingResponse create(@Valid @RequestBody BookingInput input) {
-    EventType eventType =
-        eventTypeStore
-            .findById(input.eventTypeId())
-            .orElseThrow(() -> new EventTypeNotFoundException(input.eventTypeId()));
-    return BookingResponse.from(bookingService.create(eventType, input));
+    synchronized (bookings.reservationMonitor()) {
+      EventType eventType =
+          eventTypeStore
+              .findById(input.eventTypeId())
+              .orElseThrow(() -> new EventTypeNotFoundException(input.eventTypeId()));
+      return BookingResponse.from(bookingService.create(eventType, input));
+    }
   }
 }

@@ -20,6 +20,13 @@ public class BookingStore implements BookingOccupancy {
 
   private final List<StoredBooking> items = new CopyOnWriteArrayList<>();
 
+  private final Object reservationMonitor = new Object();
+
+  @Override
+  public Object reservationMonitor() {
+    return reservationMonitor;
+  }
+
   @Override
   public List<Interval> intervalsOn(LocalDate date) {
     return items.stream()
@@ -46,17 +53,19 @@ public class BookingStore implements BookingOccupancy {
   }
 
   @Override
-  public synchronized boolean reserve(Booking booking, Duration duration) {
-    LocalDateTime start = booking.slotStart();
-    Interval candidate = new Interval(start, start.plus(duration));
-    boolean overlapping =
-        items.stream()
-            .map(StoredBooking::interval)
-            .anyMatch(interval -> interval.overlapsWith(candidate.start(), candidate.end()));
-    if (overlapping) {
-      return false;
+  public boolean reserve(Booking booking, Duration duration) {
+    synchronized (reservationMonitor) {
+      LocalDateTime start = booking.slotStart();
+      Interval candidate = new Interval(start, start.plus(duration));
+      boolean overlapping =
+          items.stream()
+              .map(StoredBooking::interval)
+              .anyMatch(interval -> interval.overlapsWith(candidate.start(), candidate.end()));
+      if (overlapping) {
+        return false;
+      }
+      items.add(new StoredBooking(booking, candidate));
+      return true;
     }
-    items.add(new StoredBooking(booking, candidate));
-    return true;
   }
 }
