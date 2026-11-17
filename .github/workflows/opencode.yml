@@ -63,7 +63,9 @@ jobs:
       - name: Run OpenCode
         id: opencode
         if: steps.budget.outputs.exhausted != 'true'
-        uses: anomalyco/opencode/github@latest
+        # форк anomalyco/opencode: шаг версии прибит к v1.19.5 — безтокенный
+        # curl к releases/latest мажорится rate-limit'ом с IP раннеров
+        uses: Iskuskov/opencode/github@latest
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
