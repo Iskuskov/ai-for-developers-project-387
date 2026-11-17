@@ -52,7 +52,7 @@ function slotLabel(start: string): string {
 
 export function SlotCalendarPage() {
   const { eventTypeId } = useParams()
-  const { data: eventTypes } = useApi(listEventTypes, [eventTypeId])
+  const { data: eventTypes, hasError: eventTypesHasError } = useApi(listEventTypes, [eventTypeId])
   const eventType = eventTypes?.find((type) => type.id === eventTypeId) ?? null
   const eventTypeMissing = eventTypes !== null && eventType === null
   const [selectedDate, setSelectedDate] = useState(() => moscowTodayIso())
@@ -118,6 +118,23 @@ export function SlotCalendarPage() {
     setSelectedDate(date)
     // Смена дня сбрасывает выбранный слот: сетка загружается заново
     setSelectedStart(null)
+  }
+
+  if (eventTypesHasError) {
+    return (
+      <Box mih="100vh" bg="gray.0">
+        <AppHeader />
+        <Container size="sm" py="xl">
+          <Stack gap="md">
+            <Title order={2}>Календарь записи</Title>
+            <Text c="red">Не удалось загрузить типы встреч</Text>
+            <Anchor component={Link} to="/booking" size="sm">
+              ← К типам встреч
+            </Anchor>
+          </Stack>
+        </Container>
+      </Box>
+    )
   }
 
   if (eventTypeMissing) {
