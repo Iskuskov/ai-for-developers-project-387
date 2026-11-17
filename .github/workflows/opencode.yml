@@ -6,12 +6,13 @@ on:
   pull_request_review_comment:
     types: [created]
 
-# один прогон на issue: новая команда отменяет устаревшую.
+# один прогон на issue/PR: новая команда отменяет устаревшую.
 # Комментарии ботов (в т.ч. ответ самого агента) получают уникальную
 # группу, чтобы их «пустые» прогоны не отменяли рабочий прогон:
-# concurrency вычисляется раньше, чем if у джоба
+# concurrency вычисляется раньше, чем if у джоба.
+# Внимание: у pull_request_review_comment нет issue.number — берём PR-номер
 concurrency:
-  group: ${{ github.event.comment.user.type == 'Bot' && format('opencode-bot-{0}', github.event.comment.id) || format('opencode-{0}', github.event.issue.number) }}
+  group: ${{ github.event.comment.user.type == 'Bot' && format('opencode-bot-{0}', github.event.comment.id) || format('opencode-{0}', github.event.issue.number || github.event.pull_request.number) }}
   cancel-in-progress: true
 
 jobs:
@@ -40,7 +41,7 @@ jobs:
         id: budget
         env:
           GH_TOKEN: ${{ github.token }}
-          ISSUE: ${{ github.event.issue.number }}
+          ISSUE: ${{ github.event.issue.number || github.event.pull_request.number }}
           LIMIT: ${{ vars.OPENCODE_PR_BUDGET || '3' }}
         run: |
           TITLE=$(gh api "repos/${{ github.repository }}/issues/$ISSUE" --jq .title)
@@ -51,7 +52,7 @@ jobs:
           echo "Прогонов агента по этому issue: $USED из $LIMIT"
           if [ "$USED" -ge "$LIMIT" ]; then
             SHA=$(git rev-parse HEAD)
-            gh issue comment "$ISSUE" --body "limit_exhausted: бюджет запусков агента исчерпан ($USED/$LIMIT). Последний SHA: \`$SHA\`. Логи: https://${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. Нужен человек."
+            gh issue comment "$ISSUE" --body "limit_exhausted: бюджет запусков агента исчерпан ($USED/$LIMIT). Последний SHA: \`$SHA\`. Логи: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}. Нужен человек."
             echo "exhausted=true" >> "$GITHUB_OUTPUT"
             exit 1
           fi
@@ -79,12 +80,15 @@ jobs:
         if: failure() && steps.budget.outputs.exhausted != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          ISSUE: ${{ github.event.issue.number }}
+          ISSUE: ${{ github.event.issue.number || github.event.pull_request.number }}
         run: |
           SHA=$(git rev-parse HEAD)
-          case "${{ steps.opencode.outcome }}" in
-            cancelled) REASON="timeout" ;;
-            failure)   REASON="agent_failed (или infra — по логам)" ;;
-            *)         REASON="agent_failed" ;;
-          esac
-          gh issue comment "$ISSUE" --body "Автопрогон агента завершился ошибкой: \`$REASON\`. Последний SHA: \`$SHA\`. Логи: https://${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. Нужен человек."
+          if [ "${{ steps.budget.outcome }}" = "failure" ]; then
+            REASON="infra (бюджет-проверка не прошла — вероятно, rate-limit api.github.com; повторите команду)"
+          else
+            case "${{ steps.opencode.outcome }}" in
+              cancelled) REASON="timeout" ;;
+              *)         REASON="agent_failed (или infra — по логам)" ;;
+            esac
+          fi
+          gh issue comment "$ISSUE" --body "Автопрогон агента завершился ошибкой: \`$REASON\`. Последний SHA: \`$SHA\`. Логи: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}. Нужен человек."
