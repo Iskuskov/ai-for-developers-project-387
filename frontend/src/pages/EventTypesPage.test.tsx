@@ -1,17 +1,19 @@
 import userEvent from '@testing-library/user-event'
-import { render, screen } from '../../test-utils'
+import { render, screen, within } from '../../test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createEventType, listEventTypes } from '../shared/api'
+import { createEventType, deleteEventType, listEventTypes } from '../shared/api'
 import type { EventType } from '../shared/api'
 import { EventTypesPage } from './EventTypesPage'
 
 vi.mock('../shared/api', () => ({
   listEventTypes: vi.fn(),
   createEventType: vi.fn(),
+  deleteEventType: vi.fn(),
 }))
 
 const listEventTypesMock = vi.mocked(listEventTypes)
 const createEventTypeMock = vi.mocked(createEventType)
+const deleteEventTypeMock = vi.mocked(deleteEventType)
 
 const seed: EventType[] = [
   {
@@ -26,6 +28,7 @@ describe('EventTypesPage', () => {
   beforeEach(() => {
     listEventTypesMock.mockReset()
     createEventTypeMock.mockReset()
+    deleteEventTypeMock.mockReset()
     listEventTypesMock.mockResolvedValue({ data: seed } as Awaited<
       ReturnType<typeof listEventTypes>
     >)
@@ -70,5 +73,43 @@ describe('EventTypesPage', () => {
     await user.click(screen.getByRole('button', { name: 'Создать' }))
 
     expect(await screen.findByText('Название не может быть пустым')).toBeInTheDocument()
+  })
+
+  it('удаляет Тип встречи после подтверждения и убирает его из списка без перезагрузки', async () => {
+    deleteEventTypeMock.mockResolvedValue({} as Awaited<ReturnType<typeof deleteEventType>>)
+    const user = userEvent.setup()
+    render(<EventTypesPage />)
+
+    expect(await screen.findByRole('heading', { name: 'Знакомство' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Удалить' }))
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByText('Удалить тип встречи?')).toBeInTheDocument()
+    expect(within(dialog).getByText(/будет удалён насовсем\. Отменить это будет нельзя\./)).toBeInTheDocument()
+
+    await user.click(within(dialog).getByRole('button', { name: 'Удалить' }))
+
+    expect(deleteEventTypeMock).toHaveBeenCalledWith({ path: { id: 'greeting' } })
+    expect(screen.queryByRole('heading', { name: 'Знакомство' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(listEventTypesMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('показывает ошибку 404 внутри открытой модалки и оставляет Тип в списке', async () => {
+    deleteEventTypeMock.mockResolvedValue({
+      error: { code: 'EVENT_TYPE_NOT_FOUND', message: 'Тип встречи не найден: greeting' },
+    } as Awaited<ReturnType<typeof deleteEventType>>)
+    const user = userEvent.setup()
+    render(<EventTypesPage />)
+
+    expect(await screen.findByRole('heading', { name: 'Знакомство' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Удалить' }))
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Удалить' }))
+
+    expect(await within(dialog).findByText('Тип встречи не найден: greeting')).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Знакомство' })).toBeInTheDocument()
   })
 })

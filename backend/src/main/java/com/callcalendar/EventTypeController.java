@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -80,5 +81,27 @@ public class EventTypeController {
   @ResponseStatus(HttpStatus.CREATED)
   public EventType create(@Valid @RequestBody EventTypeInput input) {
     return store.create(input);
+  }
+
+  @Operation(operationId = "deleteEventType", description = "Удаление типа встречи владельцем.")
+  @ApiResponses({
+    @ApiResponse(responseCode = "204", description = "Тип встречи удалён."),
+    @ApiResponse(
+        responseCode = "404",
+        description = "Тип встречи не найден.",
+        content = @Content(schema = @Schema(implementation = ApiError.class)))
+  })
+  @DeleteMapping(value = "/event-types/{id}", produces = "application/json")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void delete(
+      @PathVariable("id")
+          @Parameter(
+              in = ParameterIn.PATH,
+              description = "Идентификатор типа встречи.",
+              required = true)
+          String id) {
+    if (!store.delete(id)) {
+      throw new EventTypeNotFoundException(id, HttpStatus.NOT_FOUND);
+    }
   }
 }

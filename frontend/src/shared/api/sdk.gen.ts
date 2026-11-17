@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateBookingData, CreateBookingErrors, CreateBookingResponses, CreateEventTypeData, CreateEventTypeErrors, CreateEventTypeResponses, GetEventTypeData, GetEventTypeErrors, GetEventTypeResponses, ListBookingsData, ListBookingsResponses, ListEventTypesData, ListEventTypesResponses, ListSlotsData, ListSlotsErrors, ListSlotsResponses } from './types.gen';
+import type { CreateBookingData, CreateBookingErrors, CreateBookingResponses, CreateEventTypeData, CreateEventTypeErrors, CreateEventTypeResponses, DeleteEventTypeData, DeleteEventTypeErrors, DeleteEventTypeResponses, GetEventTypeData, GetEventTypeErrors, GetEventTypeResponses, ListBookingsData, ListBookingsResponses, ListEventTypesData, ListEventTypesResponses, ListSlotsData, ListSlotsErrors, ListSlotsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -51,6 +51,11 @@ export const createEventType = <ThrowOnError extends boolean = false>(options: O
         ...options.headers
     }
 });
+
+/**
+ * Удаление типа встречи владельцем.
+ */
+export const deleteEventType = <ThrowOnError extends boolean = false>(options: Options<DeleteEventTypeData, ThrowOnError>): RequestResult<DeleteEventTypeResponses, DeleteEventTypeErrors, ThrowOnError> => (options.client ?? client).delete<DeleteEventTypeResponses, DeleteEventTypeErrors, ThrowOnError>({ url: '/event-types/{id}', ...options });
 
 /**
  * Получение типа встречи по идентификатору.

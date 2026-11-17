@@ -33,4 +33,9 @@ public class EventTypeStore {
     items.add(created);
     return created;
   }
+
+  /** Удаляет Тип встречи по идентификатору; false, если такого Типа нет. */
+  public boolean delete(String id) {
+    return items.removeIf(type -> type.id().equals(id));
+  }
 }
